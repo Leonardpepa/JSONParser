@@ -1,0 +1,16 @@
+{
+  "key": "value",
+  "y": "\u0020",
+  "e": 12.5e-4,
+  "e2": 12e+4,
+  "e3": 12e-4,
+  "key-n": 101000,
+  "n" : -12445.1,
+  "key-o": {
+    "inner key": "inner value"
+  },
+  "key-l": [
+    "list value"
+  ],
+  "l" : [1, 2, "dd", 3]
+}
