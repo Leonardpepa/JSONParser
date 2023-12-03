@@ -423,7 +423,6 @@ func main() {
 
 func match(lexer *JSONLexer, tType string) bool {
 	if lexer.token.name == tType {
-		fmt.Printf(fmt.Sprintf("%#v", lexer.token.value))
 		nextToken, err := lexer.getNextToken()
 		if err != nil {
 			return false
