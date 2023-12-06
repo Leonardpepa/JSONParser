@@ -2,11 +2,16 @@ package main
 
 func main() {
 
-	jsonStr := []byte(`{"e": 0.123456789e-12,
-        "E": 1.234567890E+34,
-        "":  23456789012E66,
-        "zero": 0,
-        "one": 1}`)
+	jsonStr := []byte(`{
+  "key": "value",
+  "key-n": 101,
+  "key-o": {
+    "yeah" : true
+  },
+  "key-l": ["item1", 12],
+  "nullable": null,
+  "j": 122.2332323232332
+}`)
 
 	jsonParser := NewJSONParser(jsonStr)
 	object, err := jsonParser.parse()
