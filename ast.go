@@ -1,56 +1,54 @@
 package main
 
-type JSONValue interface {
-	getValue() interface{}
+import (
+	"fmt"
+)
+
+func Printify(j interface{}) {
+	printWithIndent(j, 0)
 }
 
-type JSONObject struct {
-	members map[string]JSONValue
+func printWithIndent(j interface{}, indentationLevel int) {
+	switch v := j.(type) {
+	case map[string]interface{}:
+		fmt.Println("{")
+		i := 0
+		for k, o := range v {
+			printIndentation(indentationLevel + 1)
+			fmt.Print("\""+k+"\"", ": ")
+			printWithIndent(o, indentationLevel+1)
+			if i == len(v)-1 {
+				fmt.Println()
+			} else {
+				fmt.Println(",")
+			}
+			i++
+		}
+		printIndentation(indentationLevel + 1)
+		fmt.Print("}")
+	case []interface{}:
+		fmt.Print("[")
+		for index, o := range v {
+			printWithIndent(o, indentationLevel+1)
+			if index < len(v)-1 {
+				fmt.Print(",")
+			}
+		}
+		fmt.Print("]")
+	case bool:
+		fmt.Print(v)
+	case float64:
+		fmt.Print(v)
+	case string:
+		fmt.Printf("%#v", v)
+	default:
+		if v == nil {
+			fmt.Print("null")
+		}
+	}
 }
-
-type JSONArray struct {
-	elements []JSONValue
+func printIndentation(indentationLevel int) {
+	for i := 0; i < indentationLevel; i++ {
+		fmt.Print("  ") // You can adjust the number of spaces as needed
+	}
 }
-
-type JSONString struct {
-	Value string
-}
-
-type JSONNumber struct {
-	Value float64
-}
-
-type JSONBoolean struct {
-	Value bool
-}
-
-type JSONNull struct {
-}
-
-func (obj JSONBoolean) getValue() interface{} {
-	return obj.Value
-}
-
-func (obj JSONNumber) getValue() interface{} {
-	return obj.Value
-}
-
-func (obj JSONString) getValue() interface{} {
-	return obj.Value
-}
-
-func (obj JSONArray) getValue() interface{} {
-	return obj.elements
-}
-
-func (obj JSONObject) getValue() interface{} {
-	return obj.members
-}
-
-func (obj JSONNull) getValue() interface{} {
-	return nil
-}
-
-//	func (obj JSONObject) getValue(key string) interface{} {
-//		return obj.members[key]
-//	}

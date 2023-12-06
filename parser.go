@@ -32,10 +32,10 @@ func (parser *Parser) match(tType string) Token {
 	return Token{}
 }
 
-func (parser *Parser) parse() error {
+func (parser *Parser) parse() (interface{}, error) {
 	nextT, err := parser.lexer.getNextToken()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	parser.lookahead = nextT
@@ -43,87 +43,39 @@ func (parser *Parser) parse() error {
 	parsedJson := parser.parseValue()
 
 	if parser.lookahead.value == "EOF" {
-		funcName(parsedJson, 0)
-		return nil
+		return parsedJson, nil
 	} else {
-		return fmt.Errorf("an Error occurred")
+		return nil, fmt.Errorf("an Error occurred")
 	}
 }
 
-func funcName(j JSONValue, indentationLevel int) {
-	switch v := j.(type) {
-	case JSONObject:
-		fmt.Println("{")
-		i := 0
-		for k, o := range v.members {
-			printIndentation(indentationLevel + 1)
-			fmt.Print("\""+k+"\"", ": ")
-			funcName(o, indentationLevel+1)
-			if i == len(v.members)-1 {
-				fmt.Println()
-			} else {
-				fmt.Println(",")
-			}
-			i++
-		}
-		printIndentation(indentationLevel + 1)
-		fmt.Print("}")
-	case JSONArray:
-		fmt.Print("[")
-		for index, o := range v.elements {
-			funcName(o, indentationLevel+1)
-			if index < len(v.elements)-1 {
-				fmt.Print(",")
-			}
-		}
-		fmt.Print("]")
-	case JSONNull:
-		fmt.Print("null")
-	case JSONBoolean:
-		fmt.Print(v.Value)
-	case JSONNumber:
-		fmt.Print(v.Value)
-	case JSONString:
-		fmt.Printf("%#v", v.Value)
-	}
-}
-func printIndentation(indentationLevel int) {
-	for i := 0; i < indentationLevel; i++ {
-		fmt.Print("  ") // You can adjust the number of spaces as needed
-	}
-}
-
-func (parser *Parser) parseValue() JSONValue {
+func (parser *Parser) parseValue() interface{} {
 	if parser.lookahead.name == "LBracket" {
 		return parser.parseObject()
 	} else if parser.lookahead.name == "LSquareBracket" {
 		return parser.parseArray()
 	} else if parser.lookahead.name == "string" {
 		val := parser.match("string")
-		return JSONString{
-			Value: val.value,
-		}
+		return val.value
+
 	} else if parser.lookahead.name == "number" {
 		val := parser.match("number")
 		float, err := strconv.ParseFloat(val.value, 64)
 		if err != nil {
 			return nil
 		}
-		return JSONNumber{
-			Value: float,
-		}
+		return float
 	} else if parser.lookahead.name == "true" || parser.lookahead.name == "false" || parser.lookahead.name == "<nil>" {
 		val := parser.match(parser.lookahead.name)
 		if val.value == "<nil>" {
-			return JSONNull{}
+			return nil
 		}
 		parseBool, err := strconv.ParseBool(val.value)
 		if err != nil {
 			return nil
 		}
-		return JSONBoolean{
-			Value: parseBool,
-		}
+		return parseBool
+
 	} else {
 		log.Fatalf("Error while parsing value token: %s=%s", parser.lookahead.name, parser.lookahead.value)
 	}
@@ -131,28 +83,27 @@ func (parser *Parser) parseValue() JSONValue {
 	return nil
 }
 
-func (parser *Parser) parseObject() JSONValue {
+func (parser *Parser) parseObject() interface{} {
 	parser.match("LBracket")
-	obj := JSONObject{
-		members: make(map[string]JSONValue),
-	}
+	obj := make(map[string]interface{})
+
 	if parser.lookahead.name == "string" {
 		val := parser.match("string")
 		parser.match("Colon")
-		obj.members[val.value] = parser.parseValue()
+		obj[val.value] = parser.parseValue()
 		for parser.lookahead.name == "Comma" {
 			parser.match("Comma")
 			val := parser.match("string")
 			parser.match("Colon")
-			obj.members[val.value] = parser.parseValue()
+			obj[val.value] = parser.parseValue()
 		}
 	}
 	parser.match("RBracket")
 	return obj
 }
 
-func (parser *Parser) parseArray() JSONValue {
-	arr := JSONArray{elements: make([]JSONValue, 0)}
+func (parser *Parser) parseArray() interface{} {
+	arr := make([]interface{}, 0)
 	parser.match("LSquareBracket")
 	if parser.lookahead.name == "number" ||
 		parser.lookahead.name == "string" ||
@@ -162,10 +113,10 @@ func (parser *Parser) parseArray() JSONValue {
 		parser.lookahead.name == "false" ||
 		parser.lookahead.name == "<nil>" {
 
-		arr.elements = append(arr.elements, parser.parseValue())
+		arr = append(arr, parser.parseValue())
 		for parser.lookahead.name == "Comma" {
 			parser.match("Comma")
-			arr.elements = append(arr.elements, parser.parseValue())
+			arr = append(arr, parser.parseValue())
 		}
 	}
 	parser.match("RSquareBracket")
