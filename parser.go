@@ -5,20 +5,20 @@ import (
 	"log"
 )
 
-type Parser struct {
+type JSONParser struct {
 	lexer         *JSONLexer
 	lookahead     Token
 	errorOccurred error
 }
 
-func NewParser(jsonBytes []byte) Parser {
-	parser := Parser{}
+func NewParser(jsonBytes []byte) JSONParser {
+	parser := JSONParser{}
 	parser.lexer = &JSONLexer{column: 0, line: 1}
 	parser.lexer.readJsonText(jsonBytes)
 	return parser
 }
 
-func (parser *Parser) match(tType string) Token {
+func (parser *JSONParser) match(tType string) Token {
 	if parser.lookahead.name == tType {
 		nextToken, err := parser.lexer.getNextToken()
 		if err != nil {
@@ -32,7 +32,7 @@ func (parser *Parser) match(tType string) Token {
 	return Token{}
 }
 
-func (parser *Parser) parse() (interface{}, error) {
+func (parser *JSONParser) parse() (interface{}, error) {
 	nextT, err := parser.lexer.getNextToken()
 	if err != nil {
 		return nil, err
@@ -49,7 +49,7 @@ func (parser *Parser) parse() (interface{}, error) {
 	}
 }
 
-func (parser *Parser) parseValue() interface{} {
+func (parser *JSONParser) parseValue() interface{} {
 	if parser.lookahead.name == "LBracket" {
 		return parser.parseObject()
 	} else if parser.lookahead.name == "LSquareBracket" {
@@ -71,7 +71,7 @@ func (parser *Parser) parseValue() interface{} {
 	return nil
 }
 
-func (parser *Parser) parseObject() interface{} {
+func (parser *JSONParser) parseObject() interface{} {
 	parser.match("LBracket")
 	obj := make(map[string]interface{})
 
@@ -90,7 +90,7 @@ func (parser *Parser) parseObject() interface{} {
 	return obj
 }
 
-func (parser *Parser) parseArray() interface{} {
+func (parser *JSONParser) parseArray() interface{} {
 	arr := make([]interface{}, 0)
 	parser.match("LSquareBracket")
 	if parser.lookahead.name == "number" ||
