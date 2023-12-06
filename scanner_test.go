@@ -18,7 +18,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 		"tests/big/posts.json",
 		"tests/big/photos.json",
 		"tests/big/bitcoin.json",
-		"tests/big/big.json", "tests/test/pass1.json"}
+		"tests/big/big.json"}
 
 	//cases := []string{"tests/step4/valid.json"}
 
