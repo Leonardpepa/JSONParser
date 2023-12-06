@@ -20,6 +20,8 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 		"tests/big/bitcoin.json",
 		"tests/big/big.json"}
 
+	//cases := []string{"tests/step4/valid.json"}
+
 	t.Run("Comparing scanner wit native go's scanner", func(t *testing.T) {
 		for _, filename := range cases {
 
@@ -36,6 +38,9 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 
 			jsonLexer.readJsonText(fileRead)
 			jDecoder := json.NewDecoder(bytes.NewReader(fileRead))
+
+			jsonLexer.useNumber()
+			jDecoder.UseNumber()
 
 			for {
 				token, err := jsonLexer.getNextToken()
@@ -59,8 +64,11 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				}
 
 				goTokenValue := fmt.Sprintf("%v", goToken)
-				if token.value != goTokenValue {
+				ourTokenValue := fmt.Sprintf("%v", token.value)
+
+				if ourTokenValue != goTokenValue {
 					t.Errorf("expected %s, got %s", goTokenValue, token.value)
+					//log.Fatal("")
 				}
 
 			}

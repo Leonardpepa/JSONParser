@@ -5,5 +5,6 @@
     "yeah" : true
   },
   "key-l": ["item1", 12],
-  "nullable": null
+  "nullable": null,
+  "j": 122.2332323232332
 }

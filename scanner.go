@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -53,16 +54,20 @@ const Whitespace4 = rune('\u0009')
 
 type Token struct {
 	name         string
-	value        string
+	value        interface{}
 	line, column int
 }
 
 type JSONLexer struct {
-	runes        []rune
-	position     int
-	line, column int
+	runes         []rune
+	position      int
+	line, column  int
+	parseAsNumber bool
 }
 
+func (lexer *JSONLexer) useNumber() {
+	lexer.parseAsNumber = true
+}
 func (lexer *JSONLexer) jump(ahead int) error {
 	if lexer.EOF(ahead) {
 		return fmt.Errorf("EOF")
@@ -240,19 +245,25 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (Token, error) {
 		}
 	}
 
-	float, err := strconv.ParseFloat(strBuilder.String(), 64)
+	var value interface{}
+	if lexer.parseAsNumber {
+		value = json.Number(strBuilder.String())
+	} else {
+		var err error
+		value, err = strconv.ParseFloat(strBuilder.String(), 64)
 
-	if err != nil {
-		return Token{}, err
+		if err != nil {
+			return Token{}, err
+		}
 	}
 
 	strBuilder.Reset()
-	strBuilder.WriteString(fmt.Sprintf("%v", float))
+	strBuilder.WriteString(fmt.Sprintf("%v", value))
+	strValue := strBuilder.String()
 
-	value := strBuilder.String()
 	line := lexer.line
 	col := lexer.column
-	lexer.column += utf8.RuneCountInString(value)
+	lexer.column += utf8.RuneCountInString(strValue)
 
 	return Token{
 		name:   "number",
@@ -269,18 +280,28 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (Token, error, bool) {
 	for r >= StartLowercaseLetter && r <= EndLowercaseLetter {
 		strBuilder.WriteRune(r)
 		r = lexer.peekNextRune(lookahead)
-		value := strBuilder.String()
-		if len(value) >= 3 {
-			if value == Null || value == True || value == False {
-				if value == Null {
-					value = "<nil>"
+		strVal := strBuilder.String()
+		var value interface{}
+
+		if len(strVal) >= 3 {
+			if strVal == Null || strVal == True || strVal == False {
+				if strVal == Null {
+					value = nil
+				} else {
+					var err error
+					value, err = strconv.ParseBool(strVal)
+					if err != nil {
+						return Token{}, err, false
+					}
 				}
 				err := lexer.jump(lookahead)
 				if err != nil {
 					return Token{}, err, false
 				}
+
+				lexer.column += utf8.RuneCountInString(strVal)
 				return Token{
-					name:   value,
+					name:   strVal,
 					value:  value,
 					line:   lexer.line,
 					column: lexer.column,
@@ -407,7 +428,6 @@ func (lexer *JSONLexer) getNextToken() (Token, error) {
 	// parse true, false, null
 	token, err, done := lexer.tokenizeLiterals(r)
 	if done {
-		lexer.column += utf8.RuneCountInString(token.value)
 		return token, err
 	}
 

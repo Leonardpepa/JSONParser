@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 )
 
 type Parser struct {
@@ -17,6 +16,10 @@ func NewParser(jsonBytes []byte) Parser {
 	parser.lexer = &JSONLexer{column: 0, line: 1}
 	parser.lexer.readJsonText(jsonBytes)
 	return parser
+}
+
+func (parser *Parser) useNumber() {
+	parser.lexer.useNumber()
 }
 
 func (parser *Parser) match(tType string) Token {
@@ -60,22 +63,10 @@ func (parser *Parser) parseValue() interface{} {
 
 	} else if parser.lookahead.name == "number" {
 		val := parser.match("number")
-		float, err := strconv.ParseFloat(val.value, 64)
-		if err != nil {
-			return nil
-		}
-		return float
-	} else if parser.lookahead.name == "true" || parser.lookahead.name == "false" || parser.lookahead.name == "<nil>" {
+		return val.value
+	} else if parser.lookahead.name == "true" || parser.lookahead.name == "false" || parser.lookahead.name == "null" {
 		val := parser.match(parser.lookahead.name)
-		if val.value == "<nil>" {
-			return nil
-		}
-		parseBool, err := strconv.ParseBool(val.value)
-		if err != nil {
-			return nil
-		}
-		return parseBool
-
+		return val.value
 	} else {
 		log.Fatalf("Error while parsing value token: %s=%s", parser.lookahead.name, parser.lookahead.value)
 	}
@@ -90,12 +81,12 @@ func (parser *Parser) parseObject() interface{} {
 	if parser.lookahead.name == "string" {
 		val := parser.match("string")
 		parser.match("Colon")
-		obj[val.value] = parser.parseValue()
+		obj[val.value.(string)] = parser.parseValue()
 		for parser.lookahead.name == "Comma" {
 			parser.match("Comma")
 			val := parser.match("string")
 			parser.match("Colon")
-			obj[val.value] = parser.parseValue()
+			obj[val.value.(string)] = parser.parseValue()
 		}
 	}
 	parser.match("RBracket")
@@ -111,7 +102,7 @@ func (parser *Parser) parseArray() interface{} {
 		parser.lookahead.name == "LBracket" ||
 		parser.lookahead.name == "true" ||
 		parser.lookahead.name == "false" ||
-		parser.lookahead.name == "<nil>" {
+		parser.lookahead.name == "null" {
 
 		arr = append(arr, parser.parseValue())
 		for parser.lookahead.name == "Comma" {

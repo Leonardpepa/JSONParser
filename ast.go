@@ -1,11 +1,13 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 )
 
 func Printify(j interface{}) {
 	printWithIndent(j, 0)
+	fmt.Print("\n\n")
 }
 
 func printWithIndent(j interface{}, indentationLevel int) {
@@ -38,6 +40,8 @@ func printWithIndent(j interface{}, indentationLevel int) {
 	case bool:
 		fmt.Print(v)
 	case float64:
+		fmt.Print(v)
+	case json.Number:
 		fmt.Print(v)
 	case string:
 		fmt.Printf("%#v", v)
