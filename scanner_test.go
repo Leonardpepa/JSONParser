@@ -39,9 +39,6 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 			jsonLexer.readJsonText(fileRead)
 			jDecoder := json.NewDecoder(bytes.NewReader(fileRead))
 
-			jsonLexer.useNumber()
-			jDecoder.UseNumber()
-
 			for {
 				token, err := jsonLexer.getNextToken()
 				if err != nil {

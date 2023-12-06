@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"io"
 	"log"
@@ -59,15 +58,11 @@ type Token struct {
 }
 
 type JSONLexer struct {
-	runes         []rune
-	position      int
-	line, column  int
-	parseAsNumber bool
+	runes        []rune
+	position     int
+	line, column int
 }
 
-func (lexer *JSONLexer) useNumber() {
-	lexer.parseAsNumber = true
-}
 func (lexer *JSONLexer) jump(ahead int) error {
 	if lexer.EOF(ahead) {
 		return fmt.Errorf("EOF")
@@ -246,15 +241,11 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (Token, error) {
 	}
 
 	var value interface{}
-	if lexer.parseAsNumber {
-		value = json.Number(strBuilder.String())
-	} else {
-		var err error
-		value, err = strconv.ParseFloat(strBuilder.String(), 64)
 
-		if err != nil {
-			return Token{}, err
-		}
+	var err error
+	value, err = strconv.ParseFloat(strBuilder.String(), 64)
+	if err != nil {
+		return Token{}, err
 	}
 
 	strBuilder.Reset()

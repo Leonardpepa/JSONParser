@@ -18,10 +18,6 @@ func NewParser(jsonBytes []byte) Parser {
 	return parser
 }
 
-func (parser *Parser) useNumber() {
-	parser.lexer.useNumber()
-}
-
 func (parser *Parser) match(tType string) Token {
 	if parser.lookahead.name == tType {
 		nextToken, err := parser.lexer.getNextToken()
@@ -32,6 +28,7 @@ func (parser *Parser) match(tType string) Token {
 		parser.lookahead = nextToken
 		return prev
 	}
+	log.Fatalf("type mismatch expected %s=%v got %s=%v", tType, "", parser.lookahead.name, parser.lookahead.value)
 	return Token{}
 }
 
