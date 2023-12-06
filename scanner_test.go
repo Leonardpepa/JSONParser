@@ -18,7 +18,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 		"tests/big/posts.json",
 		"tests/big/photos.json",
 		"tests/big/bitcoin.json",
-		"tests/big/big.json"}
+		"tests/big/big.json", "tests/test/pass1.json"}
 
 	//cases := []string{"tests/step4/valid.json"}
 
@@ -64,7 +64,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				ourTokenValue := fmt.Sprintf("%v", token.value)
 
 				if ourTokenValue != goTokenValue {
-					t.Errorf("expected %s, got %s", goTokenValue, token.value)
+					t.Errorf("expected %v, got %v", goTokenValue, token.value)
 					//log.Fatal("")
 				}
 

@@ -16,7 +16,7 @@ func TestCompareParserToNativeLib(t *testing.T) {
 		"tests/big/posts.json",
 		"tests/big/photos.json",
 		"tests/big/bitcoin.json",
-		"tests/big/big.json"}
+		"tests/big/big.json", "tests/test/pass1.json", "tests/test/pass2.json", "tests/test/pass3.json"}
 
 	//cases := []string{"tests/step4/valid.json"}
 
@@ -26,7 +26,7 @@ func TestCompareParserToNativeLib(t *testing.T) {
 			if err != nil {
 				return
 			}
-			parser := NewParser(file)
+			parser := NewJSONParser(file)
 
 			ourJson, err := parser.parse()
 			if err != nil {

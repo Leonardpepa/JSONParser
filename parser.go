@@ -11,7 +11,7 @@ type JSONParser struct {
 	errorOccurred error
 }
 
-func NewParser(jsonBytes []byte) JSONParser {
+func NewJSONParser(jsonBytes []byte) JSONParser {
 	parser := JSONParser{}
 	parser.lexer = &JSONLexer{column: 0, line: 1}
 	parser.lexer.readJsonText(jsonBytes)
@@ -28,7 +28,7 @@ func (parser *JSONParser) match(tType string) Token {
 		parser.lookahead = nextToken
 		return prev
 	}
-	log.Fatalf("type mismatch expected %s=%v got %s=%v", tType, "", parser.lookahead.name, parser.lookahead.value)
+	log.Fatalf("type mismatch expected %s=%v got %s=%v, line %d, col %d", tType, "", parser.lookahead.name, parser.lookahead.value, parser.lexer.line, parser.lexer.column)
 	return Token{}
 }
 
