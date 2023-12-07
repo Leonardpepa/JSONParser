@@ -144,7 +144,6 @@ func (lexer *JSONLexer) tokenizeString() (Token, error) {
 			break
 		}
 
-		// TODO case '\'
 		if r == DoubleQuotes {
 			break
 		} else if r == BackSlash {
