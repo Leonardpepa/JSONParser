@@ -27,7 +27,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 
 			fileRead, err := os.ReadFile(filename)
 			if err != nil {
-				return
+				t.Errorf(err.Error())
 			}
 
 			jsonLexer := JSONLexer{
@@ -55,7 +55,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				}
 
 				if token.name == "EOF" || goJsonError == io.EOF {
-					t.Errorf("EOF Error")
+					t.Errorf("Lexer's didnt finish together")
 				} else if goJsonError != nil {
 					t.Errorf(goJsonError.Error())
 				}
