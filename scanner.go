@@ -232,7 +232,7 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (Token, error) {
 		lookaheadRune1 := lexer.peekNextRune(0)
 		lookaheadRune2 := lexer.peekNextRune(1)
 
-		if (lookaheadRune1 == Plus || lookaheadRune1 == Minus) && unicode.IsDigit(lookaheadRune2) {
+		if (lookaheadRune1 == Plus || lookaheadRune1 == Minus || unicode.IsDigit(lookaheadRune1)) && unicode.IsDigit(lookaheadRune2) {
 			plusOrMinus, _ := lexer.getNextRune()
 			strBuilder.WriteRune(e)
 			strBuilder.WriteRune(plusOrMinus)

@@ -1,24 +1,24 @@
 package main
 
+import "log"
+
 func main() {
 
-	jsonStr := []byte(`{
-  "key": "value",
-  "key-n": 101,
-  "key-o": {
-    "yeah" : true
-  },
-  "key-l": ["item1", 12],
-  "nullable": null,
-  "j": 122.2332323232332
+	input := []byte(`{
+    "JSON Test Pattern pass3": {
+        "The outermost value": "must be an object or array.",
+        "In this test": "It is an object."
+    }
 }`)
 
-	jsonParser := NewJSONParser(jsonStr)
-	object, err := jsonParser.parse()
+	parser := NewJSONParser(input)
+
+	parsed, err := parser.parse()
 
 	if err != nil {
-		return
+		log.Fatal(err)
 	}
 
-	Printify(object)
+	Printify(parsed)
+
 }
