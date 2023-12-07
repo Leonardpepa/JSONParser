@@ -5,13 +5,13 @@ import (
 	"fmt"
 )
 
-func Printify(j interface{}) {
-	printWithIndent(j, 0)
+func Printify(object interface{}) {
+	printWithIndent(object, 0)
 	fmt.Print("\n\n")
 }
 
-func printWithIndent(j interface{}, indentationLevel int) {
-	switch v := j.(type) {
+func printWithIndent(object interface{}, indentationLevel int) {
+	switch v := object.(type) {
 	case map[string]interface{}:
 		fmt.Println("{")
 		i := 0
