@@ -87,7 +87,7 @@ func (lexer *JSONLexer) getNextRune() (rune, error) {
 }
 
 func (lexer *JSONLexer) peekNextRune(lookahead int) rune {
-	if lexer.EOF(0) {
+	if lexer.EOF(lookahead) {
 		return 0
 	}
 	return lexer.runes[lexer.position+lookahead]
@@ -232,7 +232,7 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (Token, error) {
 		lookaheadRune1 := lexer.peekNextRune(0)
 		lookaheadRune2 := lexer.peekNextRune(1)
 
-		if (lookaheadRune1 == Plus || lookaheadRune1 == Minus || unicode.IsDigit(lookaheadRune1)) && unicode.IsDigit(lookaheadRune2) {
+		if (lookaheadRune1 == Plus || lookaheadRune1 == Minus) && unicode.IsDigit(lookaheadRune2) || unicode.IsDigit(lookaheadRune1) {
 			plusOrMinus, _ := lexer.getNextRune()
 			strBuilder.WriteRune(e)
 			strBuilder.WriteRune(plusOrMinus)
