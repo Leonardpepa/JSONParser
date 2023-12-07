@@ -37,18 +37,16 @@ func printWithIndent(j interface{}, indentationLevel int) {
 			}
 		}
 		fmt.Print("]")
-	case bool:
-		fmt.Print(v)
-	case float64:
-		fmt.Print(v)
-	case json.Number:
-		fmt.Print(v)
+	case bool, float64, json.Number, nil:
+		if v == nil {
+			fmt.Println("null")
+		} else {
+			fmt.Print(v)
+		}
 	case string:
 		fmt.Printf("%#v", v)
 	default:
-		if v == nil {
-			fmt.Print("null")
-		}
+		fmt.Println("Unrecognisable type")
 	}
 }
 func printIndentation(indentationLevel int) {

@@ -8,7 +8,7 @@ func main() {
     "JSON Test Pattern pass3": {
         "The outermost value": "must be an object or array.",
         "In this test": "It is an object."
-    }
+    }, "nullable": null
 }`)
 
 	parser := NewJSONParser(input)
