@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/json"
+	"fmt"
 	"log"
 	"os"
 )
@@ -19,5 +21,20 @@ func main() {
 	}
 
 	Printify(parsed)
+}
 
+func errorsFromInvalidJsonFiles() {
+	for i := range make([]int, 33) {
+		filename := fmt.Sprintf("tests/test/fail%d.json", i+1)
+		input, err := os.ReadFile(filename)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		var d interface{}
+		err = json.Unmarshal(input, &d)
+		if err != nil {
+			fmt.Println(filename, ": ", err)
+		}
+	}
 }

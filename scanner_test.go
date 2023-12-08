@@ -22,7 +22,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 
 	//cases := []string{"tests/step4/valid.json"}
 
-	t.Run("Comparing scanner wit native go's scanner", func(t *testing.T) {
+	t.Run("Comparing scanner with native go's scanner", func(t *testing.T) {
 		for _, filename := range cases {
 
 			fileRead, err := os.ReadFile(filename)
