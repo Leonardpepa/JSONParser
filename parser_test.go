@@ -10,17 +10,17 @@ import (
 )
 
 func TestCompareParserToNativeLib(t *testing.T) {
-	//cases := []string{"tests/step1/valid.json", "tests/step2/valid.json",
-	//	"tests/step2/valid2.json",
-	//	"tests/step3/valid.json",
-	//	"tests/step4/valid.json",
-	//	"tests/step4/valid2.json",
-	//	"tests/big/posts.json",
-	//	"tests/big/photos.json",
-	//	"tests/big/bitcoin.json",
-	//	"tests/big/big.json", "tests/test/pass1.json", "tests/test/pass2.json", "tests/test/pass3.json"}
+	cases := []string{"tests/step1/valid.json", "tests/step2/valid.json",
+		"tests/step2/valid2.json",
+		"tests/step3/valid.json",
+		"tests/step4/valid.json",
+		"tests/step4/valid2.json",
+		"tests/big/posts.json",
+		"tests/big/photos.json",
+		"tests/big/bitcoin.json",
+		"tests/big/big.json", "tests/test/pass1.json", "tests/test/pass2.json", "tests/test/pass3.json"}
 
-	cases := []string{"tests/big/big.json"}
+	//cases := []string{"tests/big/big.json"}
 
 	t.Run("Comparing parser with native go's parser", func(t *testing.T) {
 		for _, filename := range cases {
