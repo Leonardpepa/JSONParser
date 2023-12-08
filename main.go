@@ -1,6 +1,7 @@
 package main
 
 import (
+	"JSONParser/jsonParser"
 	"log"
 	"os"
 )
@@ -12,9 +13,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	p := JSONParser{}
-	parsed, err := p.parse(input)
-
+	parsed, err := jsonParser.Parse(input)
+	if err != nil {
+		return
+	}
 	if err != nil {
 		log.Fatal(err)
 	}

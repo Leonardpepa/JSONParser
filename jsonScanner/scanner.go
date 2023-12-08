@@ -1,4 +1,4 @@
-package main
+package jsonScanner
 
 import (
 	"fmt"
@@ -51,28 +51,28 @@ const Whitespace3 = rune('\u000D')
 const Whitespace4 = rune('\u0009')
 
 type Token struct {
-	name         string
-	value        interface{}
-	line, column int
+	Name         string
+	Value        interface{}
+	Line, Column int
 }
 
 type JSONLexer struct {
-	runes        []rune
-	position     int
-	line, column int
+	Runes        []rune
+	Position     int
+	Line, Column int
 }
 
 func (lexer *JSONLexer) jump(ahead int) error {
 	if lexer.EOF(ahead) {
 		return fmt.Errorf("EOF")
 	}
-	lexer.column += ahead
-	lexer.position += ahead
+	lexer.Column += ahead
+	lexer.Position += ahead
 	return nil
 }
 
 func (lexer *JSONLexer) EOF(lookahead int) bool {
-	return lexer.position+lookahead > len(lexer.runes)-1
+	return lexer.Position+lookahead > len(lexer.Runes)-1
 }
 
 func (lexer *JSONLexer) getNextRune() (rune, error) {
@@ -80,16 +80,16 @@ func (lexer *JSONLexer) getNextRune() (rune, error) {
 		return 0, io.EOF
 	}
 
-	lexer.position++
+	lexer.Position++
 
-	return lexer.runes[lexer.position-1], nil
+	return lexer.Runes[lexer.Position-1], nil
 }
 
 func (lexer *JSONLexer) peekNextRune(lookahead int) rune {
 	if lexer.EOF(lookahead) {
 		return 0
 	}
-	return lexer.runes[lexer.position+lookahead]
+	return lexer.Runes[lexer.Position+lookahead]
 }
 
 func (lexer *JSONLexer) isHex(lookahead int) bool {
@@ -158,14 +158,14 @@ func (lexer *JSONLexer) tokenizeString() (Token, error) {
 
 	}
 	value := builder.String()
-	line := lexer.line
-	col := lexer.column
-	lexer.column += utf8.RuneCountInString(value)
+	line := lexer.Line
+	col := lexer.Column
+	lexer.Column += utf8.RuneCountInString(value)
 	return Token{
-		name:   "string",
-		value:  value,
-		line:   line,
-		column: col,
+		Name:   "string",
+		Value:  value,
+		Line:   line,
+		Column: col,
 	}, nil
 
 }
@@ -256,15 +256,15 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (Token, error) {
 	strBuilder.WriteString(fmt.Sprintf("%v", value))
 	strValue := strBuilder.String()
 
-	line := lexer.line
-	col := lexer.column
-	lexer.column += utf8.RuneCountInString(strValue)
+	line := lexer.Line
+	col := lexer.Column
+	lexer.Column += utf8.RuneCountInString(strValue)
 
 	return Token{
-		name:   "number",
-		value:  value,
-		line:   line,
-		column: col,
+		Name:   "number",
+		Value:  value,
+		Line:   line,
+		Column: col,
 	}, nil
 
 }
@@ -294,12 +294,12 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (Token, error, bool) {
 					return Token{}, err, false
 				}
 
-				lexer.column += utf8.RuneCountInString(strVal)
+				lexer.Column += utf8.RuneCountInString(strVal)
 				return Token{
-					name:   strVal,
-					value:  value,
-					line:   lexer.line,
-					column: lexer.column,
+					Name:   strVal,
+					Value:  value,
+					Line:   lexer.Line,
+					Column: lexer.Column,
 				}, nil, true
 			}
 		}
@@ -308,71 +308,71 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (Token, error, bool) {
 	return Token{}, nil, false
 }
 
-func (lexer *JSONLexer) getNextToken() (Token, error) {
+func (lexer *JSONLexer) GetNextToken() (Token, error) {
 
 	r, err := lexer.getNextRune()
-	lexer.column++
+	lexer.Column++
 
 	for unicode.IsSpace(r) {
-		lexer.column++
+		lexer.Column++
 		if r == '\n' {
-			lexer.line++
-			lexer.column = 1
+			lexer.Line++
+			lexer.Column = 1
 		}
 		r, err = lexer.getNextRune()
 	}
 
 	if err != nil && err.Error() == "EOF" {
-		return Token{name: "EOF", value: "EOF", line: lexer.line, column: lexer.column}, nil
+		return Token{Name: "EOF", Value: "EOF", Line: lexer.Line, Column: lexer.Column}, nil
 	}
 
 	if r == LBracket {
 		return Token{
-			name:   "LBracket",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "LBracket",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 	if r == RBracket {
 		return Token{
-			name:   "RBracket",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "RBracket",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 
 	if r == LSquareBracket {
 		return Token{
-			name:   "LSquareBracket",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "LSquareBracket",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 	if r == RSquareBracket {
 		return Token{
-			name:   "RSquareBracket",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "RSquareBracket",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 
 	if r == Comma {
 		return Token{
-			name:  "Comma",
-			value: string(r),
+			Name:  "Comma",
+			Value: string(r),
 		}, nil
 	}
 
 	if r == Colon {
 		return Token{
-			name:   "Colon",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "Colon",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 
@@ -382,12 +382,12 @@ func (lexer *JSONLexer) getNextToken() (Token, error) {
 			if err != nil {
 				return Token{}, err
 			}
-			lexer.column++
+			lexer.Column++
 			return Token{
-				name:   "number",
-				value:  float64(-0),
-				line:   lexer.line,
-				column: lexer.column,
+				Name:   "number",
+				Value:  float64(-0),
+				Line:   lexer.Line,
+				Column: lexer.Column,
 			}, nil
 		}
 
@@ -395,10 +395,10 @@ func (lexer *JSONLexer) getNextToken() (Token, error) {
 			return lexer.tokenizeDigits(r)
 		}
 		return Token{
-			name:   "Minus",
-			value:  string(r),
-			line:   lexer.line,
-			column: lexer.column,
+			Name:   "Minus",
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 
@@ -409,10 +409,10 @@ func (lexer *JSONLexer) getNextToken() (Token, error) {
 	if unicode.IsDigit(r) {
 		if r == '0' && lexer.peekNextRune(0) != e && lexer.peekNextRune(0) != E && lexer.peekNextRune(0) != Period {
 			return Token{
-				name:   "number",
-				value:  float64(0),
-				line:   lexer.line,
-				column: lexer.column,
+				Name:   "number",
+				Value:  float64(0),
+				Line:   lexer.Line,
+				Column: lexer.Column,
 			}, nil
 		}
 		return lexer.tokenizeDigits(r)
@@ -432,9 +432,9 @@ func (lexer *JSONLexer) readJsonFile(filePath string) error {
 		return err
 	}
 
-	lexer.runes = []rune(string(file))
+	lexer.Runes = []rune(string(file))
 	return nil
 }
-func (lexer *JSONLexer) readJsonText(jsonBytes []byte) {
-	lexer.runes = []rune(string(jsonBytes))
+func (lexer *JSONLexer) ReadJsonText(jsonBytes []byte) {
+	lexer.Runes = []rune(string(jsonBytes))
 }
