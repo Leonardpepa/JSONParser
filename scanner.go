@@ -278,7 +278,7 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (Token, error, bool) {
 		strVal := strBuilder.String()
 		var value interface{}
 
-		if len(strVal) >= 3 {
+		if len(strVal) > 3 {
 			if strVal == Null || strVal == True || strVal == False {
 				if strVal == Null {
 					value = nil
