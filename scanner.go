@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -205,7 +204,7 @@ func (lexer *JSONLexer) tokenizeEscapedCharacters() (string, error) {
 			unicodePoint, err := strconv.ParseUint(hexValue, 16, 32)
 
 			if err != nil {
-				log.Fatal(err)
+				return "", err
 			}
 
 			builder.WriteRune(rune(unicodePoint))
