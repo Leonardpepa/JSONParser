@@ -156,8 +156,10 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 	} else if parser.lookahead.name != "RBracket" {
 		return nil, fmt.Errorf("invalid token \"%v\" looking object closing }", parser.lookahead.value)
 	}
-	_, _ = parser.match("RBracket")
-
+	_, err := parser.match("RBracket")
+	if err != nil {
+		return nil, err
+	}
 	return obj, nil
 }
 
@@ -197,7 +199,9 @@ func (parser *JSONParser) parseArray() (interface{}, error) {
 	} else if parser.lookahead.name != "RSquareBracket" {
 		return nil, fmt.Errorf("invalid token \"%v\" looking for beginning of a value or an ending of the array", parser.lookahead.value)
 	}
-	_, _ = parser.match("RSquareBracket")
-
+	_, err = parser.match("RSquareBracket")
+	if err != nil {
+		return nil, err
+	}
 	return array, nil
 }
