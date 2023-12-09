@@ -48,17 +48,17 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				if err != nil {
 					t.Errorf(err.Error())
 				}
-				if token.Name == "Colon" || token.Name == "Comma" {
+				if token.Type == Comma || token.Type == Colon {
 					continue
 				}
 
 				goToken, goJsonError := jDecoder.Token()
 
-				if token.Name == "EOF" && goJsonError == io.EOF {
+				if token.Type == EOF && goJsonError == io.EOF {
 					break
 				}
 
-				if token.Name == "EOF" || goJsonError == io.EOF {
+				if token.Type == EOF || goJsonError == io.EOF {
 					t.Errorf("Lexer's didnt finish together")
 				} else if goJsonError != nil {
 					t.Errorf(goJsonError.Error())

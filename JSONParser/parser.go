@@ -11,43 +11,43 @@ type JSONParser struct {
 	errorOccurred error
 }
 
-func name(tType string) string {
+func name(tType int) string {
 	switch tType {
-	case "string":
+	case JSONScanner.Str:
 		return "string"
-	case "number":
+	case JSONScanner.Num:
 		return "number"
-	case "null", "true", "false":
+	case JSONScanner.Literal:
 		return "literal"
-	case "Comma":
+	case JSONScanner.Comma:
 		return ","
-	case "Colon":
+	case JSONScanner.Colon:
 		return ":"
-	case "LBracket":
+	case JSONScanner.LeftBracket:
 		return "{"
-	case "RBracket":
+	case JSONScanner.RightBracket:
 		return "}"
-	case "LSquareBracket":
+	case JSONScanner.LeftSquareBracket:
 		return "["
-	case "RSquareBracket":
+	case JSONScanner.RightSquareBracket:
 		return "]"
 	default:
 		return "unknown token type"
 	}
 }
 
-func (parser *JSONParser) match(tType string) (*JSONScanner.Token, error) {
+func (parser *JSONParser) match(tType int) (*JSONScanner.Token, error) {
 	var err error
 	var prev *JSONScanner.Token
 	var nextToken *JSONScanner.Token
-	if parser.lookahead.Name == tType {
+	if parser.lookahead.Type == tType {
 		var nestedErr error
 		nextToken, nestedErr = parser.lexer.GetNextToken()
 		if nestedErr != nil {
 			err = nestedErr
 		}
 	} else {
-		return nil, fmt.Errorf("type mismatch expected %s=\"%v\" got %s=\"%v\", Line %d, col %d", tType, name(tType), parser.lookahead.Name, parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
+		return nil, fmt.Errorf("type mismatch expected %v got %s=\"%v\", Line %d, col %d", name(tType), name(parser.lookahead.Type), parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
 	}
 
 	if err != nil {
@@ -76,32 +76,32 @@ func Parse(jsonBytes []byte) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	if parser.lookahead.Value == "EOF" {
+	if parser.lookahead.Type == JSONScanner.EOF {
 		return parsedJson, nil
 	} else {
-		return nil, fmt.Errorf("invalid token %s=\"%v\" unexpected end of json", parser.lookahead.Name, parser.lookahead.Value)
+		return nil, fmt.Errorf("invalid token %s=\"%v\" unexpected end of json", name(parser.lookahead.Type), parser.lookahead.Value)
 	}
 }
 
 func (parser *JSONParser) parseValue() (interface{}, error) {
-	if parser.lookahead.Name == "LBracket" {
+	if parser.lookahead.Type == JSONScanner.LeftBracket {
 		return parser.parseObject()
-	} else if parser.lookahead.Name == "LSquareBracket" {
+	} else if parser.lookahead.Type == JSONScanner.LeftSquareBracket {
 		return parser.parseArray()
-	} else if parser.lookahead.Name == "string" {
-		val, err := parser.match("string")
+	} else if parser.lookahead.Type == JSONScanner.Str {
+		val, err := parser.match(JSONScanner.Str)
 		if err != nil {
 			return nil, err
 		}
 		return val.Value, nil
-	} else if parser.lookahead.Name == "number" {
-		val, err := parser.match("number")
+	} else if parser.lookahead.Type == JSONScanner.Num {
+		val, err := parser.match(JSONScanner.Num)
 		if err != nil {
 			return nil, err
 		}
 		return val.Value, nil
-	} else if parser.lookahead.Name == "true" || parser.lookahead.Name == "false" || parser.lookahead.Name == "null" {
-		val, err := parser.match(parser.lookahead.Name)
+	} else if parser.lookahead.Type == JSONScanner.Literal {
+		val, err := parser.match(parser.lookahead.Type)
 		if err != nil {
 			return nil, err
 		}
@@ -112,16 +112,16 @@ func (parser *JSONParser) parseValue() (interface{}, error) {
 }
 
 func (parser *JSONParser) parseObject() (interface{}, error) {
-	_, _ = parser.match("LBracket")
+	_, _ = parser.match(JSONScanner.LeftBracket)
 
 	obj := make(map[string]interface{})
 
-	if parser.lookahead.Name == "string" {
-		key, err := parser.match("string")
+	if parser.lookahead.Type == JSONScanner.Str {
+		key, err := parser.match(JSONScanner.Str)
 		if err != nil {
 			return nil, err
 		}
-		_, err = parser.match("Colon")
+		_, err = parser.match(JSONScanner.Colon)
 		if err != nil {
 			return nil, fmt.Errorf("invalid token \"%v\" looking for Colon=\":\"", parser.lookahead.Value)
 		}
@@ -131,17 +131,17 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 		}
 		obj[key.Value.(string)] = val
 
-		for parser.lookahead.Name == "Comma" {
-			_, err := parser.match("Comma")
+		for parser.lookahead.Type == JSONScanner.Comma {
+			_, err := parser.match(JSONScanner.Comma)
 			if err != nil {
 				return nil, err
 			}
-			key, err := parser.match("string")
+			key, err := parser.match(JSONScanner.Str)
 			if err != nil {
 				return nil, fmt.Errorf("invalid token \"%v\" looking for beginning of object key string", parser.lookahead.Value)
 			}
 
-			_, err = parser.match("Colon")
+			_, err = parser.match(JSONScanner.Colon)
 			if err != nil {
 				return nil, fmt.Errorf("invalid token \"%v\" looking for Colon=\":\"", parser.lookahead.Value)
 			}
@@ -152,13 +152,13 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 			}
 			obj[key.Value.(string)] = val
 		}
-		if parser.lookahead.Name != "RBracket" {
+		if parser.lookahead.Type != JSONScanner.RightBracket {
 			return nil, fmt.Errorf("invalid token \"%v\" looking for a comma or an object closing }", parser.lookahead.Value)
 		}
-	} else if parser.lookahead.Name != "RBracket" {
+	} else if parser.lookahead.Type != JSONScanner.RightBracket {
 		return nil, fmt.Errorf("invalid token \"%v\" looking object closing }", parser.lookahead.Value)
 	}
-	_, err := parser.match("RBracket")
+	_, err := parser.match(JSONScanner.RightBracket)
 	if err != nil {
 		return nil, err
 	}
@@ -167,25 +167,23 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 
 func (parser *JSONParser) parseArray() (interface{}, error) {
 	array := make([]interface{}, 0)
-	_, err := parser.match("LSquareBracket")
+	_, err := parser.match(JSONScanner.LeftSquareBracket)
 	if err != nil {
 		return nil, err
 	}
-	if parser.lookahead.Name == "number" ||
-		parser.lookahead.Name == "string" ||
-		parser.lookahead.Name == "LSquareBracket" ||
-		parser.lookahead.Name == "LBracket" ||
-		parser.lookahead.Name == "true" ||
-		parser.lookahead.Name == "false" ||
-		parser.lookahead.Name == "null" {
+	if parser.lookahead.Type == JSONScanner.Num ||
+		parser.lookahead.Type == JSONScanner.Str ||
+		parser.lookahead.Type == JSONScanner.LeftSquareBracket ||
+		parser.lookahead.Type == JSONScanner.LeftBracket ||
+		parser.lookahead.Type == JSONScanner.Literal {
 
 		Value, err := parser.parseValue()
 		if err != nil {
 			return nil, err
 		}
 		array = append(array, Value)
-		for parser.lookahead.Name == "Comma" {
-			_, err := parser.match("Comma")
+		for parser.lookahead.Type == JSONScanner.Comma {
+			_, err := parser.match(JSONScanner.Comma)
 			if err != nil {
 				return nil, err
 			}
@@ -195,13 +193,13 @@ func (parser *JSONParser) parseArray() (interface{}, error) {
 			}
 			array = append(array, Value)
 		}
-		if parser.lookahead.Name != "RSquareBracket" {
+		if parser.lookahead.Type != JSONScanner.RightSquareBracket {
 			return nil, fmt.Errorf("invalid token \"%v\" looking for a comma or an ending of the array", parser.lookahead.Value)
 		}
-	} else if parser.lookahead.Name != "RSquareBracket" {
+	} else if parser.lookahead.Type != JSONScanner.RightSquareBracket {
 		return nil, fmt.Errorf("invalid token \"%v\" looking for beginning of a Value or an ending of the array", parser.lookahead.Value)
 	}
-	_, err = parser.match("RSquareBracket")
+	_, err = parser.match(JSONScanner.RightSquareBracket)
 	if err != nil {
 		return nil, err
 	}
