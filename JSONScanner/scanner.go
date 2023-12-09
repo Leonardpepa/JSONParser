@@ -3,7 +3,6 @@ package JSONScanner
 import (
 	"fmt"
 	"io"
-	"os"
 	"strconv"
 	"strings"
 	"unicode"
@@ -222,12 +221,41 @@ func (lexer *JSONLexer) tokenizeEscapedCharacters() (string, error) {
 
 func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 	var strBuilder strings.Builder
+
+	if digitAlreadyRead == Minus {
+		if lexer.peekNextRune(0) == '0' && lexer.peekNextRune(1) != e && lexer.peekNextRune(1) != E && lexer.peekNextRune(1) != Period {
+			_, err := lexer.getNextRune()
+			if err != nil {
+				return nil, err
+			}
+			lexer.Column++
+			return &Token{
+				Name:   "number",
+				Value:  float64(-0),
+				Line:   lexer.Line,
+				Column: lexer.Column,
+			}, nil
+		}
+	}
+
+	if digitAlreadyRead == '0' {
+		if lexer.peekNextRune(0) != e && lexer.peekNextRune(0) != E && lexer.peekNextRune(0) != Period {
+			return &Token{
+				Name:   "number",
+				Value:  float64(0),
+				Line:   lexer.Line,
+				Column: lexer.Column,
+			}, nil
+		}
+	}
+
 	strBuilder.WriteRune(digitAlreadyRead)
 	digits, err := lexer.tokenizeDigitOnly()
 
 	if err != nil {
 		return nil, err
 	}
+
 	strBuilder.WriteString(digits)
 
 	// real
@@ -294,43 +322,53 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 
 }
 
-func (lexer *JSONLexer) tokenizeLiterals(r rune) (*Token, error, bool) {
+func (lexer *JSONLexer) tokenizeLiterals(r rune) (*Token, error) {
 	lookahead := 0
 	var strBuilder strings.Builder
+
 	for r >= StartLowercaseLetter && r <= EndLowercaseLetter {
 		strBuilder.WriteRune(r)
-		r = lexer.peekNextRune(lookahead)
-		strVal := strBuilder.String()
-		var value interface{}
 
-		if len(strVal) > 3 {
-			if strVal == Null || strVal == True || strVal == False {
-				if strVal == Null {
-					value = nil
-				} else {
-					var err error
-					value, err = strconv.ParseBool(strVal)
-					if err != nil {
-						return nil, err, false
-					}
-				}
-				err := lexer.jump(lookahead)
-				if err != nil {
-					return nil, err, false
-				}
-
-				lexer.Column += utf8.RuneCountInString(strVal)
-				return &Token{
-					Name:   strVal,
-					Value:  value,
-					Line:   lexer.Line,
-					Column: lexer.Column,
-				}, nil, true
-			}
+		if lookahead == 4 {
+			break
 		}
+
+		r = lexer.peekNextRune(lookahead)
 		lookahead++
 	}
-	return nil, nil, false
+
+	strVal := strBuilder.String()
+
+	if strVal != Null && strVal != True && strVal != False {
+		return nil, fmt.Errorf("unrecognised literal %s", strVal)
+	}
+
+	var value interface{}
+
+	if strVal == Null {
+		value = nil
+	} else {
+		var err error
+		value, err = strconv.ParseBool(strVal)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	err := lexer.jump(len(strVal) - 1)
+
+	if err != nil {
+		return nil, err
+	}
+
+	lexer.Column += len(strVal) - 1
+
+	return &Token{
+		Name:   strVal,
+		Value:  value,
+		Line:   lexer.Line,
+		Column: lexer.Column,
+	}, nil
 }
 
 func (lexer *JSONLexer) GetNextToken() (*Token, error) {
@@ -338,9 +376,9 @@ func (lexer *JSONLexer) GetNextToken() (*Token, error) {
 	r, err := lexer.getNextRune()
 	lexer.Column++
 
-	for unicode.IsSpace(r) {
+	for r == Whitespace1 || r == Whitespace3 || r == Whitespace4 || r == Newline {
 		lexer.Column++
-		if r == '\n' {
+		if r == Newline {
 			lexer.Line++
 			lexer.Column = 1
 		}
@@ -402,20 +440,6 @@ func (lexer *JSONLexer) GetNextToken() (*Token, error) {
 	}
 
 	if r == Minus {
-		if lexer.peekNextRune(0) == '0' && lexer.peekNextRune(1) != e && lexer.peekNextRune(1) != E && lexer.peekNextRune(1) != Period {
-			_, err := lexer.getNextRune()
-			if err != nil {
-				return nil, err
-			}
-			lexer.Column++
-			return &Token{
-				Name:   "number",
-				Value:  float64(-0),
-				Line:   lexer.Line,
-				Column: lexer.Column,
-			}, nil
-		}
-
 		if unicode.IsDigit(lexer.peekNextRune(0)) {
 			return lexer.tokenizeDigits(r)
 		}
@@ -432,34 +456,17 @@ func (lexer *JSONLexer) GetNextToken() (*Token, error) {
 	}
 
 	if unicode.IsDigit(r) {
-		if r == '0' && lexer.peekNextRune(0) != e && lexer.peekNextRune(0) != E && lexer.peekNextRune(0) != Period {
-			return &Token{
-				Name:   "number",
-				Value:  float64(0),
-				Line:   lexer.Line,
-				Column: lexer.Column,
-			}, nil
-		}
 		return lexer.tokenizeDigits(r)
 	}
-	// parse true, false, null
-	token, err, done := lexer.tokenizeLiterals(r)
-	if done {
-		return token, err
+
+	// null, true, false
+	if r == 'n' || r == 't' || r == 'f' {
+		return lexer.tokenizeLiterals(r)
 	}
 
 	return nil, fmt.Errorf("unrecognised character %c=%d", r, r)
 }
 
-func (lexer *JSONLexer) readJsonFile(filePath string) error {
-	file, err := os.ReadFile(filePath)
-	if err != nil {
-		return err
-	}
-
-	lexer.Runes = []rune(string(file))
-	return nil
-}
 func (lexer *JSONLexer) ReadJsonText(jsonBytes []byte) {
 	lexer.Runes = []rune(string(jsonBytes))
 }
