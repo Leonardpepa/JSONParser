@@ -7,7 +7,7 @@ import (
 
 type JSONParser struct {
 	lexer         *jsonScanner.JSONLexer
-	lookahead     jsonScanner.Token
+	lookahead     *jsonScanner.Token
 	errorOccurred error
 }
 
@@ -36,10 +36,10 @@ func name(tType string) string {
 	}
 }
 
-func (parser *JSONParser) match(tType string) (jsonScanner.Token, error) {
+func (parser *JSONParser) match(tType string) (*jsonScanner.Token, error) {
 	var err error
-	var prev jsonScanner.Token
-	var nextToken jsonScanner.Token
+	var prev *jsonScanner.Token
+	var nextToken *jsonScanner.Token
 	if parser.lookahead.Name == tType {
 		var nestedErr error
 		nextToken, nestedErr = parser.lexer.GetNextToken()
@@ -47,11 +47,11 @@ func (parser *JSONParser) match(tType string) (jsonScanner.Token, error) {
 			err = nestedErr
 		}
 	} else {
-		return jsonScanner.Token{}, fmt.Errorf("type mismatch expected %s=\"%v\" got %s=\"%v\", Line %d, col %d", tType, name(tType), parser.lookahead.Name, parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
+		return nil, fmt.Errorf("type mismatch expected %s=\"%v\" got %s=\"%v\", Line %d, col %d", tType, name(tType), parser.lookahead.Name, parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
 	}
 
 	if err != nil {
-		return jsonScanner.Token{}, err
+		return nil, err
 	}
 
 	prev = parser.lookahead
