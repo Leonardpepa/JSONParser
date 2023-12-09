@@ -39,7 +39,7 @@ func printWithIndent(object interface{}, indentationLevel int) {
 		fmt.Print("]")
 	case bool, float64, json.Number, nil:
 		if v == nil {
-			fmt.Println("null")
+			fmt.Print("null")
 		} else {
 			fmt.Print(v)
 		}

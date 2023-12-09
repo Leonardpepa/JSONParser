@@ -47,6 +47,11 @@ type JSONLexer struct {
 	Runes        []rune
 	Position     int
 	Line, Column int
+	strBuilder   strings.Builder
+}
+
+func (lexer *JSONLexer) ReadJsonText(jsonBytes []byte) {
+	lexer.Runes = []rune(string(jsonBytes))
 }
 
 func (lexer *JSONLexer) jump(ahead int) error {
@@ -83,28 +88,15 @@ func (lexer *JSONLexer) isHex(lookahead int) bool {
 	lookaheadRune := lexer.peekNextRune(lookahead)
 	if unicode.IsDigit(lookaheadRune) {
 		return true
-	} else if (lookaheadRune >= startLowercaseLetter && lookaheadRune <= endLowercaseHexLetter) ||
-		(lookaheadRune >= startCapitalLetter && lookaheadRune <= endCapitalHexLetter) {
-		return true
 	}
-	return false
-}
-
-func (lexer *JSONLexer) tokenizeHex() string {
-	var hexBuilder strings.Builder
-	lookahead := 0
-
-	if lexer.isHex(lookahead) {
-		r, _ := lexer.getNextRune()
-		hexBuilder.WriteRune(r)
-	}
-
-	return hexBuilder.String()
+	return (lookaheadRune >= startLowercaseLetter && lookaheadRune <= endLowercaseHexLetter) ||
+		(lookaheadRune >= startCapitalLetter && lookaheadRune <= endCapitalHexLetter)
 }
 
 func (lexer *JSONLexer) tokenizeDigitOnly() (string, error) {
 	lookahead := 0
 	var digitBuilder strings.Builder
+
 	for {
 		if unicode.IsDigit(lexer.peekNextRune(lookahead)) == false {
 			break
@@ -120,7 +112,7 @@ func (lexer *JSONLexer) tokenizeDigitOnly() (string, error) {
 }
 
 func (lexer *JSONLexer) tokenizeString() (*Token, error) {
-	var builder strings.Builder
+	defer lexer.strBuilder.Reset()
 
 	for {
 		r, err := lexer.getNextRune()
@@ -141,13 +133,13 @@ func (lexer *JSONLexer) tokenizeString() (*Token, error) {
 			if err != nil {
 				return &Token{}, err
 			}
-			builder.WriteString(escaped)
+			lexer.strBuilder.WriteRune(escaped)
 		} else {
-			builder.WriteRune(r)
+			lexer.strBuilder.WriteRune(r)
 		}
 
 	}
-	value := builder.String()
+	value := lexer.strBuilder.String()
 	line := lexer.Line
 	col := lexer.Column
 	lexer.Column += utf8.RuneCountInString(value)
@@ -160,55 +152,57 @@ func (lexer *JSONLexer) tokenizeString() (*Token, error) {
 
 }
 
-func (lexer *JSONLexer) tokenizeEscapedCharacters() (string, error) {
+func (lexer *JSONLexer) tokenizeEscapedCharacters() (rune, error) {
 	r, err := lexer.getNextRune()
 	if err != nil {
-		return "", nil
+		return 0, nil
 	}
 	switch r {
 	case '"':
-		return "\"", nil
+		return '"', nil
 	case '\\':
-		return "\\", nil
+		return '\\', nil
 	case '/':
-		return "/", nil
+		return '/', nil
 	case 'b':
-		return "\b", nil
+		return '\b', nil
 	case 'f':
-		return "\f", nil
+		return '\f', nil
 	case 'n':
-		return "\n", nil
+		return '\n', nil
 	case 'r':
-		return "\r", nil
+		return '\r', nil
 	case 't':
-		return "\t", nil
+		return '\t', nil
 	case 'u':
-		var builder strings.Builder
+
 		lookahead1, lookahead2, lookahead3, lookahead4 := 0, 1, 2, 3
 
 		if lexer.isHex(lookahead1) && lexer.isHex(lookahead2) && lexer.isHex(lookahead3) && lexer.isHex(lookahead4) {
-			hex1 := lexer.tokenizeHex()
-			hex2 := lexer.tokenizeHex()
-			hex3 := lexer.tokenizeHex()
-			hex4 := lexer.tokenizeHex()
+			hex1 := string(lexer.peekNextRune(lookahead1))
+			hex2 := string(lexer.peekNextRune(lookahead2))
+			hex3 := string(lexer.peekNextRune(lookahead3))
+			hex4 := string(lexer.peekNextRune(lookahead4))
 
 			hexValue := fmt.Sprintf("%s%s%s%s", hex1, hex2, hex3, hex4)
 			unicodePoint, err := strconv.ParseUint(hexValue, 16, 32)
 
 			if err != nil {
-				return "", err
+				return 0, err
 			}
-
-			builder.WriteRune(rune(unicodePoint))
+			err = lexer.jump(4)
+			if err != nil {
+				return 0, err
+			}
+			lexer.Column += 4
+			return rune(unicodePoint), nil
 		}
-		return builder.String(), nil
-	default:
-		return "", fmt.Errorf("invalid character in string escape code")
 	}
+	return 0, fmt.Errorf("invalid character in string escape code")
 }
 
 func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
-	var strBuilder strings.Builder
+	defer lexer.strBuilder.Reset()
 
 	if digitAlreadyRead == '-' {
 		if lexer.peekNextRune(0) == '0' &&
@@ -239,14 +233,14 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 		}
 	}
 
-	strBuilder.WriteRune(digitAlreadyRead)
+	lexer.strBuilder.WriteRune(digitAlreadyRead)
 	digits, err := lexer.tokenizeDigitOnly()
 
 	if err != nil {
 		return nil, err
 	}
 
-	strBuilder.WriteString(digits)
+	lexer.strBuilder.WriteString(digits)
 
 	// real
 	if lexer.peekNextRune(0) == '.' && unicode.IsDigit(lexer.peekNextRune(1)) {
@@ -255,13 +249,13 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 			return nil, err
 		}
 
-		strBuilder.WriteRune(r)
+		lexer.strBuilder.WriteRune(r)
 
 		digits, err := lexer.tokenizeDigitOnly()
 		if err != nil {
 			return nil, err
 		}
-		strBuilder.WriteString(digits)
+		lexer.strBuilder.WriteString(digits)
 	}
 
 	// exponent
@@ -271,33 +265,33 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 			return nil, err
 		}
 
-		strBuilder.WriteRune(e)
+		lexer.strBuilder.WriteRune(e)
 		lookaheadRune1 := lexer.peekNextRune(0)
 		lookaheadRune2 := lexer.peekNextRune(1)
 
 		if (lookaheadRune1 == '+' || lookaheadRune1 == '-') && unicode.IsDigit(lookaheadRune2) || unicode.IsDigit(lookaheadRune1) {
 			plusOrMinus, _ := lexer.getNextRune()
-			strBuilder.WriteRune(plusOrMinus)
+			lexer.strBuilder.WriteRune(plusOrMinus)
 
 			digits, err := lexer.tokenizeDigitOnly()
 
 			if err != nil {
 				return nil, err
 			}
-			strBuilder.WriteString(digits)
+			lexer.strBuilder.WriteString(digits)
 		} else {
-			return nil, fmt.Errorf("invalid number Literal %s", strBuilder.String())
+			return nil, fmt.Errorf("invalid number Literal %s", lexer.strBuilder.String())
 		}
 	}
 
-	value, err := strconv.ParseFloat(strBuilder.String(), 64)
+	value, err := strconv.ParseFloat(lexer.strBuilder.String(), 64)
 	if err != nil {
 		return nil, err
 	}
 
-	strBuilder.Reset()
-	strBuilder.WriteString(fmt.Sprintf("%v", value))
-	strValue := strBuilder.String()
+	lexer.strBuilder.Reset()
+	lexer.strBuilder.WriteString(fmt.Sprintf("%v", value))
+	strValue := lexer.strBuilder.String()
 
 	line := lexer.Line
 	col := lexer.Column
@@ -313,11 +307,11 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 }
 
 func (lexer *JSONLexer) tokenizeLiterals(r rune) (*Token, error) {
-	lookahead := 0
-	var strBuilder strings.Builder
+	defer lexer.strBuilder.Reset()
 
+	lookahead := 0
 	for r >= startLowercaseLetter && r <= endLowercaseLetter {
-		strBuilder.WriteRune(r)
+		lexer.strBuilder.WriteRune(r)
 
 		if lookahead == 4 {
 			break
@@ -327,7 +321,7 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (*Token, error) {
 		lookahead++
 	}
 
-	strVal := strBuilder.String()
+	strVal := lexer.strBuilder.String()
 
 	if strVal != "null" && strVal != "true" && strVal != "false" {
 		return nil, fmt.Errorf("unrecognised Literal %s", strVal)
@@ -455,8 +449,4 @@ func (lexer *JSONLexer) GetNextToken() (*Token, error) {
 	}
 
 	return nil, fmt.Errorf("unrecognised character %c=%d", r, r)
-}
-
-func (lexer *JSONLexer) ReadJsonText(jsonBytes []byte) {
-	lexer.Runes = []rune(string(jsonBytes))
 }
