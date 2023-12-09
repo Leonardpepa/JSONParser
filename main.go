@@ -2,6 +2,7 @@ package main
 
 import (
 	"JSONParser/JSONParser"
+	"JSONParser/Util"
 	"log"
 	"os"
 )
@@ -21,5 +22,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	Printify(parsed)
+	Util.Printify(parsed)
 }
