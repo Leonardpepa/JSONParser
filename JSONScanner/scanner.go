@@ -1,4 +1,4 @@
-package jsonScanner
+package JSONScanner
 
 import (
 	"fmt"

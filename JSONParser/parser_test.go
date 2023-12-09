@@ -1,4 +1,4 @@
-package jsonParser
+package JSONParser
 
 import (
 	"encoding/json"
@@ -26,7 +26,7 @@ func TestCompareParserToNativeLib(t *testing.T) {
 
 	//cases := []string{"tests/big/big.json"}
 
-	t.Run("Comparing jsonParser with native go's jsonParser", func(t *testing.T) {
+	t.Run("Comparing JSONParser with native go's JSONParser", func(t *testing.T) {
 		for _, filename := range cases {
 			file, err := os.ReadFile(filename)
 			if err != nil {

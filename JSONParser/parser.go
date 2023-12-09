@@ -1,13 +1,13 @@
-package jsonParser
+package JSONParser
 
 import (
-	"JSONParser/jsonScanner"
+	"JSONParser/JSONScanner"
 	"fmt"
 )
 
 type JSONParser struct {
-	lexer         *jsonScanner.JSONLexer
-	lookahead     *jsonScanner.Token
+	lexer         *JSONScanner.JSONLexer
+	lookahead     *JSONScanner.Token
 	errorOccurred error
 }
 
@@ -36,10 +36,10 @@ func name(tType string) string {
 	}
 }
 
-func (parser *JSONParser) match(tType string) (*jsonScanner.Token, error) {
+func (parser *JSONParser) match(tType string) (*JSONScanner.Token, error) {
 	var err error
-	var prev *jsonScanner.Token
-	var nextToken *jsonScanner.Token
+	var prev *JSONScanner.Token
+	var nextToken *JSONScanner.Token
 	if parser.lookahead.Name == tType {
 		var nestedErr error
 		nextToken, nestedErr = parser.lexer.GetNextToken()
@@ -62,7 +62,7 @@ func (parser *JSONParser) match(tType string) (*jsonScanner.Token, error) {
 
 func Parse(jsonBytes []byte) (interface{}, error) {
 	parser := JSONParser{}
-	parser.lexer = &jsonScanner.JSONLexer{Column: 0, Line: 1}
+	parser.lexer = &JSONScanner.JSONLexer{Column: 0, Line: 1}
 	parser.lexer.ReadJsonText(jsonBytes)
 
 	nextT, err := parser.lexer.GetNextToken()

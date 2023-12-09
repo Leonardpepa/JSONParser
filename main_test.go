@@ -1,7 +1,7 @@
 package main
 
 import (
-	"JSONParser/jsonParser"
+	"JSONParser/JSONParser"
 	"reflect"
 	"testing"
 )
@@ -27,7 +27,7 @@ func TestFields(t *testing.T) {
 			"array":        []interface{}{float64(1), float64(2), float64(100)},
 		}
 
-		parsed, err := jsonParser.Parse(input)
+		parsed, err := JSONParser.Parse(input)
 
 		if err != nil {
 			t.Errorf("Error: %s", err.Error())
