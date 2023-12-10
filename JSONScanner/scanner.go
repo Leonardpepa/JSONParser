@@ -141,8 +141,9 @@ func (lexer *JSONLexer) tokenizeString() (*Token, error) {
 	}
 	value := lexer.strBuilder.String()
 	line := lexer.Line
-	col := lexer.Column
-	lexer.Column += utf8.RuneCountInString(value)
+	col := lexer.Column + 1
+	// count the ending double quote
+	lexer.Column += utf8.RuneCountInString(value) + 1
 	return &Token{
 		Type:   Str,
 		Value:  value,
@@ -191,10 +192,11 @@ func (lexer *JSONLexer) tokenizeEscapedCharacters() (rune, error) {
 				return 0, err
 			}
 			err = lexer.jump(4)
+
 			if err != nil {
 				return 0, err
 			}
-			lexer.Column += 4
+
 			return rune(unicodePoint), nil
 		}
 	}
@@ -345,8 +347,6 @@ func (lexer *JSONLexer) tokenizeLiterals(r rune) (*Token, error) {
 		return nil, err
 	}
 
-	lexer.Column += len(strVal) - 1
-
 	return &Token{
 		Type:   Literal,
 		Value:  value,
@@ -409,8 +409,10 @@ func (lexer *JSONLexer) GetNextToken() (*Token, error) {
 
 	if r == ',' {
 		return &Token{
-			Type:  Comma,
-			Value: string(r),
+			Type:   Comma,
+			Value:  string(r),
+			Line:   lexer.Line,
+			Column: lexer.Column,
 		}, nil
 	}
 
