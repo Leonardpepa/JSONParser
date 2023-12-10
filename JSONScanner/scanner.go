@@ -50,7 +50,7 @@ type JSONLexer struct {
 	strBuilder   strings.Builder
 }
 
-func (lexer *JSONLexer) ReadJsonText(jsonBytes []byte) {
+func (lexer *JSONLexer) ReadJson(jsonBytes []byte) {
 	lexer.Runes = []rune(string(jsonBytes))
 }
 

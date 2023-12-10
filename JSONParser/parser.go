@@ -63,7 +63,7 @@ func (parser *JSONParser) match(tType int) (*JSONScanner.Token, error) {
 func Parse(jsonBytes []byte) (interface{}, error) {
 	parser := JSONParser{}
 	parser.lexer = &JSONScanner.JSONLexer{Column: 0, Line: 1}
-	parser.lexer.ReadJsonText(jsonBytes)
+	parser.lexer.ReadJson(jsonBytes)
 
 	nextT, err := parser.lexer.GetNextToken()
 	if err != nil {

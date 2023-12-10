@@ -40,7 +40,7 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				Column: 0,
 			}
 
-			jsonLexer.ReadJsonText(fileRead)
+			jsonLexer.ReadJson(fileRead)
 			jDecoder := json.NewDecoder(bytes.NewReader(fileRead))
 
 			for {
