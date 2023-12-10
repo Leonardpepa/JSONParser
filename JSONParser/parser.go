@@ -40,14 +40,11 @@ func (parser *JSONParser) match(tType int) (*JSONScanner.Token, error) {
 	var err error
 	var prev *JSONScanner.Token
 	var nextToken *JSONScanner.Token
+
 	if parser.lookahead.Type == tType {
-		var nestedErr error
-		nextToken, nestedErr = parser.lexer.GetNextToken()
-		if nestedErr != nil {
-			err = nestedErr
-		}
+		nextToken, err = parser.lexer.GetNextToken()
 	} else {
-		return nil, fmt.Errorf("type mismatch expected %v got \"%v\", Line %d, col %d", name(tType), parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
+		err = fmt.Errorf("type mismatch expected %v got \"%v\", Line %d, col %d", name(tType), parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
 	}
 
 	if err != nil {
