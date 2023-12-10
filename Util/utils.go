@@ -10,33 +10,41 @@ func Printify(object interface{}) {
 	fmt.Print("\n\n")
 }
 
+func printMap(object map[string]interface{}, indentationLevel int) {
+	fmt.Println("{")
+	i := 0
+	for k, o := range object {
+		printIndentation(indentationLevel + 1)
+		fmt.Print("\""+k+"\"", ": ")
+		printWithIndent(o, indentationLevel+1)
+		if i == len(object)-1 {
+			fmt.Println()
+		} else {
+			fmt.Println(",")
+		}
+		i++
+	}
+	printIndentation(indentationLevel)
+	fmt.Print("}")
+}
+
+func printArray(array []interface{}, indentationLevel int) {
+	fmt.Print("[")
+	for index, o := range array {
+		printWithIndent(o, indentationLevel+1)
+		if index < len(array)-1 {
+			fmt.Print(", ")
+		}
+	}
+	fmt.Print("]")
+}
+
 func printWithIndent(object interface{}, indentationLevel int) {
 	switch v := object.(type) {
 	case map[string]interface{}:
-		fmt.Println("{")
-		i := 0
-		for k, o := range v {
-			printIndentation(indentationLevel + 1)
-			fmt.Print("\""+k+"\"", ": ")
-			printWithIndent(o, indentationLevel+1)
-			if i == len(v)-1 {
-				fmt.Println()
-			} else {
-				fmt.Println(",")
-			}
-			i++
-		}
-		printIndentation(indentationLevel + 1)
-		fmt.Print("}")
+		printMap(v, indentationLevel)
 	case []interface{}:
-		fmt.Print("[")
-		for index, o := range v {
-			printWithIndent(o, indentationLevel+1)
-			if index < len(v)-1 {
-				fmt.Print(",")
-			}
-		}
-		fmt.Print("]")
+		printArray(v, indentationLevel)
 	case bool, float64, json.Number, nil:
 		if v == nil {
 			fmt.Print("null")

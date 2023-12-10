@@ -12,5 +12,10 @@
   "key-l": [
     "list value"
   ],
-  "l" : [1, 2, "dd", 3]
+  "l" : [1, 2, "dd", 3],
+  "nested": {
+    "n": {
+      "attr": true
+    }
+  }
 }
