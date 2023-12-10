@@ -47,7 +47,7 @@ func (parser *JSONParser) match(tType int) (*JSONScanner.Token, error) {
 			err = nestedErr
 		}
 	} else {
-		return nil, fmt.Errorf("type mismatch expected %v got %s=\"%v\", Line %d, col %d", name(tType), name(parser.lookahead.Type), parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
+		return nil, fmt.Errorf("type mismatch expected %v got \"%v\", Line %d, col %d", name(tType), parser.lookahead.Value, parser.lexer.Line, parser.lexer.Column)
 	}
 
 	if err != nil {
@@ -79,7 +79,7 @@ func Parse(jsonBytes []byte) (interface{}, error) {
 	if parser.lookahead.Type == JSONScanner.EOF {
 		return parsedJson, nil
 	} else {
-		return nil, fmt.Errorf("invalid token %s=\"%v\" unexpected end of json", name(parser.lookahead.Type), parser.lookahead.Value)
+		return nil, fmt.Errorf("invalid token \"%v\" unexpected end of json", parser.lookahead.Value)
 	}
 }
 
