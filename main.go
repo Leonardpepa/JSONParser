@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	input, err := os.ReadFile("tests/step4/valid.json")
+	input, err := os.ReadFile("tests/step2/invalid2.json")
 
 	if err != nil {
 		log.Fatal(err)
@@ -16,7 +16,7 @@ func main() {
 
 	parsed, err := JSONParser.Parse(input)
 	if err != nil {
-		return
+		log.Fatal(err)
 	}
 	if err != nil {
 		log.Fatal(err)

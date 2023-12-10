@@ -17,8 +17,8 @@ const (
 	Comma
 	Colon
 	Literal
-	Str
-	Num
+	String
+	Number
 	EOF
 	Minus
 )
@@ -145,7 +145,7 @@ func (lexer *JSONLexer) tokenizeString() (*Token, error) {
 	// count the ending double quote
 	lexer.Column += utf8.RuneCountInString(value) + 1
 	return &Token{
-		Type:   Str,
+		Type:   String,
 		Value:  value,
 		Line:   line,
 		Column: col,
@@ -216,7 +216,7 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 			}
 			lexer.Column++
 			return &Token{
-				Type:   Num,
+				Type:   Number,
 				Value:  float64(-0),
 				Line:   lexer.Line,
 				Column: lexer.Column,
@@ -227,7 +227,7 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 	if digitAlreadyRead == '0' {
 		if lexer.peekNextRune(0) != 'e' && lexer.peekNextRune(0) != 'E' && lexer.peekNextRune(0) != '.' {
 			return &Token{
-				Type:   Num,
+				Type:   Number,
 				Value:  float64(0),
 				Line:   lexer.Line,
 				Column: lexer.Column,
@@ -300,7 +300,7 @@ func (lexer *JSONLexer) tokenizeDigits(digitAlreadyRead rune) (*Token, error) {
 	lexer.Column += utf8.RuneCountInString(strValue)
 
 	return &Token{
-		Type:   Num,
+		Type:   Number,
 		Value:  value,
 		Line:   line,
 		Column: col,

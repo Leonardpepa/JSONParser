@@ -13,9 +13,9 @@ type JSONParser struct {
 
 func name(tType int) string {
 	switch tType {
-	case JSONScanner.Str:
+	case JSONScanner.String:
 		return "string"
-	case JSONScanner.Num:
+	case JSONScanner.Number:
 		return "number"
 	case JSONScanner.Literal:
 		return "literal"
@@ -88,14 +88,14 @@ func (parser *JSONParser) parseValue() (interface{}, error) {
 		return parser.parseObject()
 	} else if parser.lookahead.Type == JSONScanner.LeftSquareBracket {
 		return parser.parseArray()
-	} else if parser.lookahead.Type == JSONScanner.Str {
-		val, err := parser.match(JSONScanner.Str)
+	} else if parser.lookahead.Type == JSONScanner.String {
+		val, err := parser.match(JSONScanner.String)
 		if err != nil {
 			return nil, err
 		}
 		return val.Value, nil
-	} else if parser.lookahead.Type == JSONScanner.Num {
-		val, err := parser.match(JSONScanner.Num)
+	} else if parser.lookahead.Type == JSONScanner.Number {
+		val, err := parser.match(JSONScanner.Number)
 		if err != nil {
 			return nil, err
 		}
@@ -112,12 +112,14 @@ func (parser *JSONParser) parseValue() (interface{}, error) {
 }
 
 func (parser *JSONParser) parseObject() (interface{}, error) {
-	_, _ = parser.match(JSONScanner.LeftBracket)
-
+	_, err := parser.match(JSONScanner.LeftBracket)
+	if err != nil {
+		return nil, fmt.Errorf("%s\nlooking for beginning of object key string\n", err.Error())
+	}
 	obj := make(map[string]interface{})
 
-	if parser.lookahead.Type == JSONScanner.Str {
-		key, err := parser.match(JSONScanner.Str)
+	if parser.lookahead.Type == JSONScanner.String {
+		key, err := parser.match(JSONScanner.String)
 		if err != nil {
 			return nil, err
 		}
@@ -134,9 +136,9 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 		for parser.lookahead.Type == JSONScanner.Comma {
 			_, err := parser.match(JSONScanner.Comma)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("%s\nlooking for beginning of object key string\n", err.Error())
 			}
-			key, err := parser.match(JSONScanner.Str)
+			key, err := parser.match(JSONScanner.String)
 			if err != nil {
 				return nil, fmt.Errorf("invalid token \"%v\" looking for beginning of object key string", parser.lookahead.Value)
 			}
@@ -158,9 +160,9 @@ func (parser *JSONParser) parseObject() (interface{}, error) {
 	} else if parser.lookahead.Type != JSONScanner.RightBracket {
 		return nil, fmt.Errorf("invalid token \"%v\" looking object closing }", parser.lookahead.Value)
 	}
-	_, err := parser.match(JSONScanner.RightBracket)
+	_, err = parser.match(JSONScanner.RightBracket)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s\nlooking object closing }", err.Error())
 	}
 	return obj, nil
 }
@@ -169,10 +171,10 @@ func (parser *JSONParser) parseArray() (interface{}, error) {
 	array := make([]interface{}, 0)
 	_, err := parser.match(JSONScanner.LeftSquareBracket)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s\nlooking for a value or an ending of the array\n", err.Error())
 	}
-	if parser.lookahead.Type == JSONScanner.Num ||
-		parser.lookahead.Type == JSONScanner.Str ||
+	if parser.lookahead.Type == JSONScanner.Number ||
+		parser.lookahead.Type == JSONScanner.String ||
 		parser.lookahead.Type == JSONScanner.LeftSquareBracket ||
 		parser.lookahead.Type == JSONScanner.LeftBracket ||
 		parser.lookahead.Type == JSONScanner.Literal {
