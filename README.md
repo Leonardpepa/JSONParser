@@ -94,6 +94,12 @@ func main() {
   "y": " "
 }
 ```
+# How to run
+1. clone the repo ```git clone https://github.com/Leonardpepa/JSONParser```
+2. build ```go build```
+3. run on windows ```JSONParser.exe```
+4. run on linux ```./JSONParser```
+5. test ```go test ./...```
 
 # Tests
 The parser is tested comparing the results against the native go json package.
