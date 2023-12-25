@@ -61,3 +61,7 @@ func main() {
   "y": " "
 }
 ```
+
+# Tests
+The parser is tested comparing the results against the native go json package.
+Run the tests ```go test ./...```
