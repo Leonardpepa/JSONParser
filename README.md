@@ -24,6 +24,15 @@ The json is parsed directly as an interface{}. Can be used exactly like go manip
 
 # Example Usage
 ```go
+package main
+
+import (
+	"JSONParser/JSONParser"
+	"JSONParser/Util"
+	"log"
+	"os"
+)
+
 func main() {
 	input, err := os.ReadFile("tests/step4/valid2.json")
 
