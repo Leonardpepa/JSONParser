@@ -9,14 +9,14 @@ build for my personal educational purposes
 * TODO: implement json stringify
 
 # Implementation Details
-The implementation is based in the json specification [Introducing JSON](https://www.json.org/json-en.html).
+The implementation is based on the json specification [Introducing JSON](https://www.json.org/json-en.html).
 
 ## Lexical analysis
 This step is responsible to create the tokens.
 A json scanner was implemented from scratch to accomplish this task.
 
 ## Syntax analysis
-This step is responsible to match the tokens in the correct way that matches the formal grammar and create the syntax tree.
+This step is responsible to validate the correct structure that matches the formal grammar and create the syntax tree.
 The parser implemented in this project is a recursive descent parser based on the json context free grammar seen in the specification [Introducing JSON](https://www.json.org/json-en.html).
 
 ## Syntax tree 
@@ -37,6 +37,30 @@ func main() {
 	}
 
 	Util.Printify(parsed)
+}
+```
+## File tests/step4/valid2.json
+```json
+{
+  "key": "value",
+  "y": "\u0020",
+  "e": 12.5e-4,
+  "e2": 12e+4,
+  "e3": 12e-4,
+  "key-n": 101000,
+  "n" : -12445.1,
+  "key-o": {
+    "inner key": "inner value"
+  },
+  "key-l": [
+    "list value"
+  ],
+  "l" : [1, 2, "dd", 3],
+  "nested": {
+    "n": {
+      "attr": true
+    }
+  }
 }
 ```
 ## Output
