@@ -76,18 +76,19 @@ func TestCompareParserToNativeLib(t *testing.T) {
 }
 
 func TestCompareParserInvalidJson(t *testing.T) {
-	t.Run("Parser should fail", func(t *testing.T) {
-		files := []string{
-			"../tests/step1/invalid.json",
-			"../tests/step2/invalid.json",
-			"../tests/step2/invalid2.json",
-			"../tests/step3/invalid.json",
-			"../tests/step4/invalid.json",
-		}
-		for i := range make([]int, 33) {
-			files = append(files, fmt.Sprintf("../tests/test/fail%d.json", i+1))
-		}
-		for _, filename := range files {
+	files := []string{
+		"../tests/step1/invalid.json",
+		"../tests/step2/invalid.json",
+		"../tests/step2/invalid2.json",
+		"../tests/step3/invalid.json",
+		"../tests/step4/invalid.json",
+	}
+	for i := range make([]int, 33) {
+		files = append(files, fmt.Sprintf("../tests/test/fail%d.json", i+1))
+	}
+
+	for _, filename := range files {
+		t.Run(filename, func(t *testing.T) {
 			input, err := os.ReadFile(filename)
 			if err != nil {
 				log.Fatal(err)
@@ -98,6 +99,7 @@ func TestCompareParserInvalidJson(t *testing.T) {
 			if err == nil {
 				t.Errorf("file %s parsed invalid json", filename)
 			}
-		}
-	})
+		})
+	}
+
 }

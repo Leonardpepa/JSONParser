@@ -25,10 +25,8 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 		"../tests/test/pass3.json"}
 
 	//cases := []string{"tests/step4/valid.json"}
-
-	t.Run("Comparing JSONScanner with native go's JSONScanner", func(t *testing.T) {
-		for _, filename := range cases {
-
+	for _, filename := range cases {
+		t.Run(filename, func(t *testing.T) {
 			fileRead, err := os.ReadFile(filename)
 			if err != nil {
 				t.Errorf(err.Error())
@@ -72,6 +70,8 @@ func TestCompareScannerToNativeLib(t *testing.T) {
 				}
 
 			}
-		}
-	})
+		})
+
+	}
+
 }
